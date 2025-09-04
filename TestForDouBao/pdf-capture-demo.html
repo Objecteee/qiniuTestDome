@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF截图演示</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+        }
+        .pdf-viewer {
+            flex: 1;
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+        .controls {
+            flex: 1;
+            padding: 10px;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            max-width: 100%;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        input[type="file"] {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>PDF截图演示</h1>
+    
+    <div class="container">
+        <div class="pdf-viewer">
+            <h3>PDF预览</h3>
+            <input type="file" id="pdfInput" accept=".pdf" />
+            <div id="pdfContainer"></div>
+        </div>
+        
+        <div class="controls">
+            <h3>截图控制</h3>
+            <button onclick="captureCurrentPage()">截图当前页</button>
+            <button onclick="captureAllPages()">截图所有页</button>
+            <button onclick="downloadImage()">下载图片</button>
+            
+            <div class="result">
+                <h4>截图结果：</h4>
+                <canvas id="resultCanvas" style="display: none;"></canvas>
+                <img id="resultImage" style="max-width: 100%;" />
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPDF = null;
+        let currentPage = 1;
+        let totalPages = 0;
+        let capturedImages = [];
+
+        // 配置PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        // 文件选择处理
+        document.getElementById('pdfInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                loadPDF(file);
+            }
+        });
+
+        // 加载PDF
+        async function loadPDF(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+            currentPDF = pdf;
+            totalPages = pdf.numPages;
+            
+            console.log(`PDF加载成功，共${totalPages}页`);
+            renderPage(1);
+        }
+
+        // 渲染PDF页面
+        async function renderPage(pageNum) {
+            if (!currentPDF) return;
+            
+            const page = await currentPDF.getPage(pageNum);
+            const scale = 1.5;
+            const viewport = page.getViewport({ scale });
+            
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            
+            const renderContext = {
+                canvasContext: context,
+                viewport: viewport
+            };
+            
+            await page.render(renderContext).promise;
+            
+            // 显示在页面上
+            const container = document.getElementById('pdfContainer');
+            container.innerHTML = '';
+            container.appendChild(canvas);
+            
+            currentPage = pageNum;
+            console.log(`渲染第${pageNum}页完成`);
+        }
+
+        // 截图当前页
+        async function captureCurrentPage() {
+            if (!currentPDF) {
+                alert('请先加载PDF文件');
+                return;
+            }
+            
+            const page = await currentPDF.getPage(currentPage);
+            const scale = 2.0; // 高分辨率截图
+            const viewport = page.getViewport({ scale });
+            
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            
+            const renderContext = {
+                canvasContext: context,
+                viewport: viewport
+            };
+            
+            await page.render(renderContext).promise;
+            
+            // 显示结果
+            const resultCanvas = document.getElementById('resultCanvas');
+            const resultImage = document.getElementById('resultImage');
+            
+            resultCanvas.width = canvas.width;
+            resultCanvas.height = canvas.height;
+            resultCanvas.getContext('2d').drawImage(canvas, 0, 0);
+            
+            resultImage.src = canvas.toDataURL('image/png');
+            resultImage.style.display = 'block';
+            
+            console.log(`第${currentPage}页截图完成`);
+        }
+
+        // 截图所有页
+        async function captureAllPages() {
+            if (!currentPDF) {
+                alert('请先加载PDF文件');
+                return;
+            }
+            
+            capturedImages = [];
+            
+            for (let i = 1; i <= totalPages; i++) {
+                const page = await currentPDF.getPage(i);
+                const scale = 2.0;
+                const viewport = page.getViewport({ scale });
+                
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+                
+                const renderContext = {
+                    canvasContext: context,
+                    viewport: viewport
+                };
+                
+                await page.render(renderContext).promise;
+                
+                capturedImages.push({
+                    pageNumber: i,
+                    dataURL: canvas.toDataURL('image/png')
+                });
+                
+                console.log(`第${i}页截图完成`);
+            }
+            
+            // 显示第一页作为预览
+            if (capturedImages.length > 0) {
+                const resultImage = document.getElementById('resultImage');
+                resultImage.src = capturedImages[0].dataURL;
+                resultImage.style.display = 'block';
+            }
+            
+            console.log(`所有${totalPages}页截图完成`);
+        }
+
+        // 下载图片
+        function downloadImage() {
+            const resultImage = document.getElementById('resultImage');
+            if (!resultImage.src) {
+                alert('请先截图');
+                return;
+            }
+            
+            const link = document.createElement('a');
+            link.download = `pdf-page-${currentPage}.png`;
+            link.href = resultImage.src;
+            link.click();
+        }
+
+        // 页面导航
+        function nextPage() {
+            if (currentPage < totalPages) {
+                renderPage(currentPage + 1);
+            }
+        }
+
+        function prevPage() {
+            if (currentPage > 1) {
+                renderPage(currentPage - 1);
+            }
+        }
+
+        // 添加页面导航按钮
+        document.addEventListener('DOMContentLoaded', function() {
+            const controls = document.querySelector('.controls');
+            const navDiv = document.createElement('div');
+            navDiv.innerHTML = `
+                <h4>页面导航</h4>
+                <button onclick="prevPage()">上一页</button>
+                <span id="pageInfo">第 1 页，共 1 页</span>
+                <button onclick="nextPage()">下一页</button>
+            `;
+            controls.insertBefore(navDiv, controls.firstChild);
+        });
+    </script>
+</body>
+</html>
