@@ -5,12 +5,12 @@ const API_URL = 'https://openapi.italent.cn/RecruitV6/api/v1/Apply/GetApplyIdsBy
 // 注意：根据实际认证方式，你可能需要在 headers 中添加 Token 或其它认证信息
 const HEADERS = {
     'Content-Type': 'application/json',
-    'Authorization': 'Bearer X4eTEiMr-2MumLXhF4KIpJ8JviRYBA56ogIOsfGyroIfGIQscnVixVzN42iYklITcOGSrBFjA' // 如果接口需要，请取消注释并替换
+    'Authorization': 'Bearer X4eTEiMr-8fNUY8i6BlQ130Qu7e9mkTd-rCPbK0fcQhJcorHK-NgJswxkFUH3aMMHXt5YlSUA' // 如果接口需要，请取消注释并替换
 };
 
 // 测试用的同步 ID 数组 (请替换成你实际调用 CreateApply 后得到的 syncIds)
 const testSyncIds = [
-    "eef0a798-54b8-4d75-89e7-b6edb1a2fe68",
+    "67edd0a9-2819-4c6d-9697-e3dace040dc2",
 ];
 
 async function testGetApplyIdsBySyncIds() {
