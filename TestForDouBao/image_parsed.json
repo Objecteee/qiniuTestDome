@@ -1,0 +1,39 @@
+{
+  "personalInfo": {
+    "name": "李庆援",
+    "phone": "19861022505",
+    "email": "1311022959@qq.com",
+    "gender": null,
+    "age": null,
+    "location": null
+  },
+  "education": [
+    {
+      "school": "东华理工大学",
+      "major": "软件工程",
+      "degree": "本科",
+      "graduationYear": "2027"
+    }
+  ],
+  "workExperience": [],
+  "skills": [
+    "HTML",
+    "CSS",
+    "Javascript",
+    "ES6",
+    "TypeScript",
+    "git",
+    "React",
+    "VUE",
+    "Element",
+    "Antd",
+    "Zarm",
+    "ECharts",
+    "Node.js",
+    "Next.js",
+    "Egg.js",
+    "SpringBoot",
+    "Mysql"
+  ],
+  "summary": null
+}
